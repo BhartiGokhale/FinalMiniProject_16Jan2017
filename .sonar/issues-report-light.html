@@ -1,0 +1,1321 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>Issues report of MiniProject</title>
+  <link href="issuesreport_files/sonar.css" media="all" rel="stylesheet" type="text/css">
+  <link rel="shortcut icon" type="image/x-icon" href="issuesreport_files/favicon.ico">
+  <script type="text/javascript" src="issuesreport_files/jquery.min.js"></script>
+  <script type="text/javascript">
+    var issuesPerResource = [
+      [
+          {'k': '0159D55826AB05B7DC', 'r': 'Rsquid:S2095', 'l': 152, 'new': true, 's': 'blocker'},
+          {'k': '0159D55826AB05B7DD', 'r': 'Rsquid:S2095', 'l': 125, 'new': true, 's': 'blocker'},
+          {'k': '0159D55826AB05B7DE', 'r': 'Rsquid:CommentedOutCodeLine', 'l': 118, 'new': true, 's': 'major'},
+          {'k': '0159D55826AB05B7DF', 'r': 'Rsquid:CommentedOutCodeLine', 'l': 124, 'new': true, 's': 'major'},
+          {'k': '0159D55826AB05B7E0', 'r': 'Rsquid:CommentedOutCodeLine', 'l': 127, 'new': true, 's': 'major'},
+          {'k': '0159D55826AB05B7E1', 'r': 'Rsquid:S106', 'l': 88, 'new': true, 's': 'major'},
+          {'k': '0159D55826AB05B7E2', 'r': 'Rsquid:S1126', 'l': 134, 'new': true, 's': 'minor'},
+          {'k': '0159D55826AB05B7E3', 'r': 'Rsquid:S1488', 'l': 56, 'new': true, 's': 'minor'},
+          {'k': '0159D55826AB05B7E4', 'r': 'Rsquid:S1166', 'l': 27, 'new': true, 's': 'critical'},
+          {'k': '0159D55826AB05B7E5', 'r': 'Rsquid:S1166', 'l': 49, 'new': true, 's': 'critical'},
+          {'k': '0159D55826AB05B7E6', 'r': 'Rsquid:S1166', 'l': 58, 'new': true, 's': 'critical'},
+          {'k': '0159D55826AB05B7E7', 'r': 'Rsquid:S1166', 'l': 78, 'new': true, 's': 'critical'},
+          {'k': '0159D55826AB05B7E8', 'r': 'Rsquid:S1186', 'l': 14, 'new': true, 's': 'major'},
+          {'k': '0159D55826AB05B7E9', 'r': 'Rsquid:S00117', 'l': 116, 'new': true, 's': 'minor'},
+          {'k': '0159D55826AB05B7EA', 'r': 'Rsquid:S00117', 'l': 144, 'new': true, 's': 'minor'},
+          {'k': '0159D55826AB05B7EB', 'r': 'Rsquid:UselessImportCheck', 'l': 5, 'new': true, 's': 'minor'}
+      ]
+      
+    ];
+    var nbResources = 1;
+    var separators = new Array();
+
+    function showLine(fileIndex, lineId) {
+      var elt = $('#' + fileIndex + 'L' + lineId);
+      if (elt != null) {
+        elt.show();
+      }
+      elt = $('#' + fileIndex + 'LV' + lineId);
+      if (elt != null) {
+        elt.show();
+      }
+    }
+
+    /* lineIds must be sorted */
+    function showLines(fileIndex, lineIds) {
+      var lastSeparatorId = 9999999;
+      for (var lineIndex = 0; lineIndex < lineIds.length; lineIndex++) {
+        var lineId = lineIds[lineIndex];
+        if (lineId > 0) {
+          if (lineId > lastSeparatorId) {
+            var separator = $('#' + fileIndex + 'S' + lastSeparatorId);
+            if (separator != null) {
+              separator.addClass('visible');
+              separators.push(separator);
+            }
+          }
+
+          for (var i = -2; i < 3; ++i) {
+            showLine(fileIndex, lineId + i);
+          }
+          lastSeparatorId = lineId + 2;
+        }
+      }
+    }
+     function hideAll() {
+       $('tr.row').hide();
+       $('div.issue').hide();
+       for (var separatorIndex = 0; separatorIndex < separators.length; separatorIndex++) {
+         separators[separatorIndex].removeClass('visible');
+       }
+       separators.length = 0;
+       $('.sources td.ko').removeClass('ko');
+     }
+
+     function showIssues(fileIndex, issues) {
+       $.each(issues, function(index, issue) {
+         $('#' + issue['k']).show();
+         $('#' + fileIndex + 'L' + issue['l'] + ' td.line').addClass('ko');
+       });
+       var showResource = issues.length > 0;
+       if (showResource) {
+         $('#resource-' + fileIndex).show();
+       } else {
+         $('#resource-' + fileIndex).hide();
+       }
+     }
+
+
+    function refreshFilters(updateSelect) {
+      var onlyNewIssues = true;
+
+      if (updateSelect) {
+        populateSelectFilter(onlyNewIssues);
+      }
+      var ruleFilter = $('#rule_filter').val();
+
+      hideAll();
+      if (onlyNewIssues) {
+        $('.all').addClass('all-masked');
+      } else {
+        $('.all').removeClass('all-masked');
+      }
+      for (var resourceIndex = 0; resourceIndex < nbResources; resourceIndex++) {
+        var filteredIssues = $.grep(issuesPerResource[resourceIndex], function(v) {
+              return (!onlyNewIssues || v['new']) && (ruleFilter == '' || v['r'] == ruleFilter || v['s'] == ruleFilter);
+            }
+        );
+
+        var linesToDisplay = $.map(filteredIssues, function(v, i) {
+          return v['l'];
+        });
+
+        linesToDisplay.sort();// the showLines() requires sorted ids
+        showLines(resourceIndex, linesToDisplay);
+        showIssues(resourceIndex, filteredIssues);
+      }
+    }
+
+
+    var severityFilter = [
+       { "key": "blocker",
+         "label": "Blocker",
+         "total": 2,
+         "newtotal": 2
+       },
+       { "key": "major",
+         "label": "Major",
+         "total": 5,
+         "newtotal": 5
+       },
+       { "key": "minor",
+         "label": "Minor",
+         "total": 5,
+         "newtotal": 5
+       },
+       { "key": "critical",
+         "label": "Critical",
+         "total": 4,
+         "newtotal": 4
+       }
+    ];
+
+    var ruleFilter = [
+       { "key": "squid:S2095",
+         "label": "Resources should be closed",
+         "total": 2,
+         "newtotal": 2
+       },
+       { "key": "squid:CommentedOutCodeLine",
+         "label": "Sections of code should not be \"commented out\"",
+         "total": 3,
+         "newtotal": 3
+       },
+       { "key": "squid:S106",
+         "label": "Standard outputs should not be used directly to log anything",
+         "total": 1,
+         "newtotal": 1
+       },
+       { "key": "squid:S1126",
+         "label": "Return of boolean expressions should not be wrapped into an \"if-then-else\" statement",
+         "total": 1,
+         "newtotal": 1
+       },
+       { "key": "squid:S1488",
+         "label": "Local Variables should not be declared and then immediately returned or thrown",
+         "total": 1,
+         "newtotal": 1
+       },
+       { "key": "squid:S1166",
+         "label": "Exception handlers should preserve the original exceptions",
+         "total": 4,
+         "newtotal": 4
+       },
+       { "key": "squid:S1186",
+         "label": "Methods should not be empty",
+         "total": 1,
+         "newtotal": 1
+       },
+       { "key": "squid:S00117",
+         "label": "Local variable and method parameter names should comply with a naming convention",
+         "total": 2,
+         "newtotal": 2
+       },
+       { "key": "squid:UselessImportCheck",
+         "label": "Useless imports should be removed",
+         "total": 1,
+         "newtotal": 1
+       }
+    ].sort(function(a, b) {
+        var x = a.label; var y = b.label;
+        return ((x < y) ? -1 : ((x > y) ? 1 : 0));
+    });
+
+    function populateSelectFilter(onlyNewIssues) {
+       var ruleFilterSelect = $('#rule_filter');
+       ruleFilterSelect.empty().append(function() {
+         var output = '';
+         output += '<option value="" selected>Filter by:</option>';
+         output += '<optgroup label="Severity">';
+         $.each(severityFilter, function(key, value) {
+           if ((!onlyNewIssues && value.total > 0) || value.newtotal > 0) {
+             output += '<option value="' + value.key + '">' + value.label + ' (' + (onlyNewIssues ? value.newtotal : value.total) + ')</option>';
+           }
+         });
+         output += '<optgroup label="Rule">';
+         $.each(ruleFilter, function(key, value) {
+           if ((!onlyNewIssues && value.total > 0) || value.newtotal > 0) {
+             output += '<option value="R' + value.key + '">' + value.label + ' (' + (onlyNewIssues ? value.newtotal : value.total) + ')</option>';
+           }
+         });
+         return output;
+       });
+    }
+  </script>
+</head>
+<body>
+<div id="reportHeader">
+  <div id="logo"><img src="issuesreport_files/sonarqube-24x100.png" alt="SonarQube"/></div>
+  <div class="title">Issues Report</div>
+  <div class="subtitle">MiniProject - Jan 25, 2017 4:47:19 PM</div>
+</div>
+
+<div id="content">
+
+  <div class="banner">Light report: only new issues are displayed</div>
+
+  <div id="summary">
+  <table width="100%">
+    <tbody>
+    <tr>
+      <td align="center" width="50%">
+        <h3>New issues</h3>
+        <span class="big worst">16</span>
+      </td>
+      <td align="center" width="50%">
+        <h3>Resolved issues</h3>
+        <span class="big">0</span>
+      </td>
+    </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <br/>
+
+  <div class="banner">
+
+    <select id="rule_filter" onchange="refreshFilters(false)">
+    </select>
+  </div>
+
+  <div id="summary-per-file">
+  <table width="100%" class="data " id="resource-0">
+    <thead>
+    <tr class="total">
+      <th align="left" colspan="2" nowrap>
+        <div class="file_title">
+          <img src="issuesreport_files/FIL.png" title="MiniProject:src/bms/common/BMSDBManager.java"/>
+          <a href="#" onclick="$('.resource-details-0').toggleClass('masked'); return false;" style="color: black" title="MiniProject:src/bms/common/BMSDBManager.java">BMSDBManager.java</a>
+        </div>
+      </th>
+      <th align="right" width="1%" nowrap class="resource-details-0">
+          <span class="worst" id="new-total">16</span>
+        <br/>New issues
+      </th>
+    </tr>
+    </thead>
+    <tbody class="resource-details-0">
+      <tr>
+        <td colspan="3">
+          <table class="sources" border="0" cellpadding="0" cellspacing="0">
+                <tr id="0L3" class="row">
+                  <td class="lid ">3</td>
+                  <td class="line ">
+                    <pre>import java.sql.*;</pre>
+                  </td>
+                </tr>
+                <tr id="0S3" class="blockSep">
+                  <td colspan="2"></td>
+                </tr>
+                <tr id="0L4" class="row">
+                  <td class="lid ">4</td>
+                  <td class="line ">
+                    <pre>import javax.sql.*;</pre>
+                  </td>
+                </tr>
+                <tr id="0S4" class="blockSep">
+                  <td colspan="2"></td>
+                </tr>
+                <tr id="0L5" class="row">
+                  <td class="lid ">5</td>
+                  <td class="line ">
+                    <pre>import java.util.Date;</pre>
+                  </td>
+                </tr>
+                <tr id="0S5" class="blockSep">
+                  <td colspan="2"></td>
+                </tr>
+                  <tr id="0LV5" class="row">
+                    <td class="lid"></td>
+                    <td class="issues">
+                        <div class="issue" id="0159D55826AB05B7EB">
+                          <div class="vtitle">
+                            <i class="icon-severity-minor"></i>
+                            <span class="rulename">Remove this unused import 'java.util.Date'.</span>
+                            &nbsp;
+                            <img src="issuesreport_files/sep12.png">&nbsp;
+
+                            <span class="issue_date">
+                                NEW
+                            </span>
+                
+						                &nbsp;
+						                <img src="issuesreport_files/sep12.png">&nbsp;
+						                
+						                <span class="rule_key">squid:UselessImportCheck</span>
+                            &nbsp;
+
+                          </div>
+                          <div class="discussionComment">
+                            Useless imports should be removed
+                          </div>
+                        </div>
+                    </td>
+                  </tr>
+                <tr id="0L6" class="row">
+                  <td class="lid ">6</td>
+                  <td class="line ">
+                    <pre>import java.util.logging.Logger;</pre>
+                  </td>
+                </tr>
+                <tr id="0S6" class="blockSep">
+                  <td colspan="2"></td>
+                </tr>
+                <tr id="0L7" class="row">
+                  <td class="lid ">7</td>
+                  <td class="line ">
+                    <pre>import java.util.*;</pre>
+                  </td>
+                </tr>
+                <tr id="0S7" class="blockSep">
+                  <td colspan="2"></td>
+                </tr>
+                <tr id="0L12" class="row">
+                  <td class="lid ">12</td>
+                  <td class="line ">
+                    <pre>	Connection con = null;</pre>
+                  </td>
+                </tr>
+                <tr id="0S12" class="blockSep">
+                  <td colspan="2"></td>
+                </tr>
+                <tr id="0L13" class="row">
+                  <td class="lid ">13</td>
+                  <td class="line ">
+                    <pre>	</pre>
+                  </td>
+                </tr>
+                <tr id="0S13" class="blockSep">
+                  <td colspan="2"></td>
+                </tr>
+                <tr id="0L14" class="row">
+                  <td class="lid ">14</td>
+                  <td class="line ">
+                    <pre>	public BMSDBManager()</pre>
+                  </td>
+                </tr>
+                <tr id="0S14" class="blockSep">
+                  <td colspan="2"></td>
+                </tr>
+                  <tr id="0LV14" class="row">
+                    <td class="lid"></td>
+                    <td class="issues">
+                        <div class="issue" id="0159D55826AB05B7E8">
+                          <div class="vtitle">
+                            <i class="icon-severity-major"></i>
+                            <span class="rulename">Add a nested comment explaining why this method is empty, throw an UnsupportedOperationException or complete the implementation.</span>
+                            &nbsp;
+                            <img src="issuesreport_files/sep12.png">&nbsp;
+
+                            <span class="issue_date">
+                                NEW
+                            </span>
+                
+						                &nbsp;
+						                <img src="issuesreport_files/sep12.png">&nbsp;
+						                
+						                <span class="rule_key">squid:S1186</span>
+                            &nbsp;
+
+                          </div>
+                          <div class="discussionComment">
+                            Methods should not be empty
+                          </div>
+                        </div>
+                    </td>
+                  </tr>
+                <tr id="0L15" class="row">
+                  <td class="lid ">15</td>
+                  <td class="line ">
+                    <pre>	{</pre>
+                  </td>
+                </tr>
+                <tr id="0S15" class="blockSep">
+                  <td colspan="2"></td>
+                </tr>
+                <tr id="0L16" class="row">
+                  <td class="lid ">16</td>
+                  <td class="line ">
+                    <pre>		</pre>
+                  </td>
+                </tr>
+                <tr id="0S16" class="blockSep">
+                  <td colspan="2"></td>
+                </tr>
+                <tr id="0L25" class="row">
+                  <td class="lid ">25</td>
+                  <td class="line ">
+                    <pre>				Class.forName(driverName);</pre>
+                  </td>
+                </tr>
+                <tr id="0S25" class="blockSep">
+                  <td colspan="2"></td>
+                </tr>
+                <tr id="0L26" class="row">
+                  <td class="lid ">26</td>
+                  <td class="line ">
+                    <pre>				logger.info(&quot;Driver Loaded inside DBManager getConnection Method&quot;+driverName);			</pre>
+                  </td>
+                </tr>
+                <tr id="0S26" class="blockSep">
+                  <td colspan="2"></td>
+                </tr>
+                <tr id="0L27" class="row">
+                  <td class="lid ">27</td>
+                  <td class="line ">
+                    <pre>			}catch(ClassNotFoundException cnfe)</pre>
+                  </td>
+                </tr>
+                <tr id="0S27" class="blockSep">
+                  <td colspan="2"></td>
+                </tr>
+                  <tr id="0LV27" class="row">
+                    <td class="lid"></td>
+                    <td class="issues">
+                        <div class="issue" id="0159D55826AB05B7E4">
+                          <div class="vtitle">
+                            <i class="icon-severity-critical"></i>
+                            <span class="rulename">Either log or rethrow this exception.</span>
+                            &nbsp;
+                            <img src="issuesreport_files/sep12.png">&nbsp;
+
+                            <span class="issue_date">
+                                NEW
+                            </span>
+                
+						                &nbsp;
+						                <img src="issuesreport_files/sep12.png">&nbsp;
+						                
+						                <span class="rule_key">squid:S1166</span>
+                            &nbsp;
+
+                          </div>
+                          <div class="discussionComment">
+                            Exception handlers should preserve the original exceptions
+                          </div>
+                        </div>
+                    </td>
+                  </tr>
+                <tr id="0L28" class="row">
+                  <td class="lid ">28</td>
+                  <td class="line ">
+                    <pre>			{</pre>
+                  </td>
+                </tr>
+                <tr id="0S28" class="blockSep">
+                  <td colspan="2"></td>
+                </tr>
+                <tr id="0L29" class="row">
+                  <td class="lid ">29</td>
+                  <td class="line ">
+                    <pre>				logger.info(&quot;Class Not Found Exception Has Occured&quot;);</pre>
+                  </td>
+                </tr>
+                <tr id="0S29" class="blockSep">
+                  <td colspan="2"></td>
+                </tr>
+                <tr id="0L47" class="row">
+                  <td class="lid ">47</td>
+                  <td class="line ">
+                    <pre>				String driverName=&quot;com.mysql.jdbc.Driver&quot;;</pre>
+                  </td>
+                </tr>
+                <tr id="0S47" class="blockSep">
+                  <td colspan="2"></td>
+                </tr>
+                <tr id="0L48" class="row">
+                  <td class="lid ">48</td>
+                  <td class="line ">
+                    <pre>				Class.forName(driverName);</pre>
+                  </td>
+                </tr>
+                <tr id="0S48" class="blockSep">
+                  <td colspan="2"></td>
+                </tr>
+                <tr id="0L49" class="row">
+                  <td class="lid ">49</td>
+                  <td class="line ">
+                    <pre>			}catch(ClassNotFoundException cnfe)</pre>
+                  </td>
+                </tr>
+                <tr id="0S49" class="blockSep">
+                  <td colspan="2"></td>
+                </tr>
+                  <tr id="0LV49" class="row">
+                    <td class="lid"></td>
+                    <td class="issues">
+                        <div class="issue" id="0159D55826AB05B7E5">
+                          <div class="vtitle">
+                            <i class="icon-severity-critical"></i>
+                            <span class="rulename">Either log or rethrow this exception.</span>
+                            &nbsp;
+                            <img src="issuesreport_files/sep12.png">&nbsp;
+
+                            <span class="issue_date">
+                                NEW
+                            </span>
+                
+						                &nbsp;
+						                <img src="issuesreport_files/sep12.png">&nbsp;
+						                
+						                <span class="rule_key">squid:S1166</span>
+                            &nbsp;
+
+                          </div>
+                          <div class="discussionComment">
+                            Exception handlers should preserve the original exceptions
+                          </div>
+                        </div>
+                    </td>
+                  </tr>
+                <tr id="0L50" class="row">
+                  <td class="lid ">50</td>
+                  <td class="line ">
+                    <pre>			{</pre>
+                  </td>
+                </tr>
+                <tr id="0S50" class="blockSep">
+                  <td colspan="2"></td>
+                </tr>
+                <tr id="0L51" class="row">
+                  <td class="lid ">51</td>
+                  <td class="line ">
+                    <pre>				logger.warning(&quot;Class Not Found Exception Has Occured&quot;);</pre>
+                  </td>
+                </tr>
+                <tr id="0S51" class="blockSep">
+                  <td colspan="2"></td>
+                </tr>
+                <tr id="0L54" class="row">
+                  <td class="lid ">54</td>
+                  <td class="line ">
+                    <pre>			{</pre>
+                  </td>
+                </tr>
+                <tr id="0S54" class="blockSep">
+                  <td colspan="2"></td>
+                </tr>
+                <tr id="0L55" class="row">
+                  <td class="lid ">55</td>
+                  <td class="line ">
+                    <pre>				String url=&quot;jdbc:mysql://localhost:3306/cybage&quot;;</pre>
+                  </td>
+                </tr>
+                <tr id="0S55" class="blockSep">
+                  <td colspan="2"></td>
+                </tr>
+                <tr id="0L56" class="row">
+                  <td class="lid ">56</td>
+                  <td class="line ">
+                    <pre>				Connection con1=DriverManager.getConnection(url,&quot;root&quot;,&quot;root&quot;);</pre>
+                  </td>
+                </tr>
+                <tr id="0S56" class="blockSep">
+                  <td colspan="2"></td>
+                </tr>
+                  <tr id="0LV56" class="row">
+                    <td class="lid"></td>
+                    <td class="issues">
+                        <div class="issue" id="0159D55826AB05B7E3">
+                          <div class="vtitle">
+                            <i class="icon-severity-minor"></i>
+                            <span class="rulename">Immediately return this expression instead of assigning it to the temporary variable &quot;con1&quot;.</span>
+                            &nbsp;
+                            <img src="issuesreport_files/sep12.png">&nbsp;
+
+                            <span class="issue_date">
+                                NEW
+                            </span>
+                
+						                &nbsp;
+						                <img src="issuesreport_files/sep12.png">&nbsp;
+						                
+						                <span class="rule_key">squid:S1488</span>
+                            &nbsp;
+
+                          </div>
+                          <div class="discussionComment">
+                            Local Variables should not be declared and then immediately returned or thrown
+                          </div>
+                        </div>
+                    </td>
+                  </tr>
+                <tr id="0L57" class="row">
+                  <td class="lid ">57</td>
+                  <td class="line ">
+                    <pre>				return con1;</pre>
+                  </td>
+                </tr>
+                <tr id="0S57" class="blockSep">
+                  <td colspan="2"></td>
+                </tr>
+                <tr id="0L58" class="row">
+                  <td class="lid ">58</td>
+                  <td class="line ">
+                    <pre>			}catch(SQLException sqle)</pre>
+                  </td>
+                </tr>
+                <tr id="0S58" class="blockSep">
+                  <td colspan="2"></td>
+                </tr>
+                  <tr id="0LV58" class="row">
+                    <td class="lid"></td>
+                    <td class="issues">
+                        <div class="issue" id="0159D55826AB05B7E6">
+                          <div class="vtitle">
+                            <i class="icon-severity-critical"></i>
+                            <span class="rulename">Either log or rethrow this exception.</span>
+                            &nbsp;
+                            <img src="issuesreport_files/sep12.png">&nbsp;
+
+                            <span class="issue_date">
+                                NEW
+                            </span>
+                
+						                &nbsp;
+						                <img src="issuesreport_files/sep12.png">&nbsp;
+						                
+						                <span class="rule_key">squid:S1166</span>
+                            &nbsp;
+
+                          </div>
+                          <div class="discussionComment">
+                            Exception handlers should preserve the original exceptions
+                          </div>
+                        </div>
+                    </td>
+                  </tr>
+                <tr id="0L59" class="row">
+                  <td class="lid ">59</td>
+                  <td class="line ">
+                    <pre>			{</pre>
+                  </td>
+                </tr>
+                <tr id="0S59" class="blockSep">
+                  <td colspan="2"></td>
+                </tr>
+                <tr id="0L60" class="row">
+                  <td class="lid ">60</td>
+                  <td class="line ">
+                    <pre>				logger.warning(&quot;SQL Exception Has Occured&quot;);</pre>
+                  </td>
+                </tr>
+                <tr id="0S60" class="blockSep">
+                  <td colspan="2"></td>
+                </tr>
+                <tr id="0L76" class="row">
+                  <td class="lid ">76</td>
+                  <td class="line ">
+                    <pre>				}</pre>
+                  </td>
+                </tr>
+                <tr id="0S76" class="blockSep">
+                  <td colspan="2"></td>
+                </tr>
+                <tr id="0L77" class="row">
+                  <td class="lid ">77</td>
+                  <td class="line ">
+                    <pre>				</pre>
+                  </td>
+                </tr>
+                <tr id="0S77" class="blockSep">
+                  <td colspan="2"></td>
+                </tr>
+                <tr id="0L78" class="row">
+                  <td class="lid ">78</td>
+                  <td class="line ">
+                    <pre>			}catch(SQLException sql)</pre>
+                  </td>
+                </tr>
+                <tr id="0S78" class="blockSep">
+                  <td colspan="2"></td>
+                </tr>
+                  <tr id="0LV78" class="row">
+                    <td class="lid"></td>
+                    <td class="issues">
+                        <div class="issue" id="0159D55826AB05B7E7">
+                          <div class="vtitle">
+                            <i class="icon-severity-critical"></i>
+                            <span class="rulename">Either log or rethrow this exception.</span>
+                            &nbsp;
+                            <img src="issuesreport_files/sep12.png">&nbsp;
+
+                            <span class="issue_date">
+                                NEW
+                            </span>
+                
+						                &nbsp;
+						                <img src="issuesreport_files/sep12.png">&nbsp;
+						                
+						                <span class="rule_key">squid:S1166</span>
+                            &nbsp;
+
+                          </div>
+                          <div class="discussionComment">
+                            Exception handlers should preserve the original exceptions
+                          </div>
+                        </div>
+                    </td>
+                  </tr>
+                <tr id="0L79" class="row">
+                  <td class="lid ">79</td>
+                  <td class="line ">
+                    <pre>			{</pre>
+                  </td>
+                </tr>
+                <tr id="0S79" class="blockSep">
+                  <td colspan="2"></td>
+                </tr>
+                <tr id="0L80" class="row">
+                  <td class="lid ">80</td>
+                  <td class="line ">
+                    <pre>				logger.warning(&quot;Error While Closing Connection&quot;);</pre>
+                  </td>
+                </tr>
+                <tr id="0S80" class="blockSep">
+                  <td colspan="2"></td>
+                </tr>
+                <tr id="0L86" class="row">
+                  <td class="lid ">86</td>
+                  <td class="line ">
+                    <pre>		if(con==null)</pre>
+                  </td>
+                </tr>
+                <tr id="0S86" class="blockSep">
+                  <td colspan="2"></td>
+                </tr>
+                <tr id="0L87" class="row">
+                  <td class="lid ">87</td>
+                  <td class="line ">
+                    <pre>			openConnection();</pre>
+                  </td>
+                </tr>
+                <tr id="0S87" class="blockSep">
+                  <td colspan="2"></td>
+                </tr>
+                <tr id="0L88" class="row">
+                  <td class="lid ">88</td>
+                  <td class="line ">
+                    <pre>		System.out.println(&quot;Inside getPKID&quot;);</pre>
+                  </td>
+                </tr>
+                <tr id="0S88" class="blockSep">
+                  <td colspan="2"></td>
+                </tr>
+                  <tr id="0LV88" class="row">
+                    <td class="lid"></td>
+                    <td class="issues">
+                        <div class="issue" id="0159D55826AB05B7E1">
+                          <div class="vtitle">
+                            <i class="icon-severity-major"></i>
+                            <span class="rulename">Replace this usage of System.out or System.err by a logger.</span>
+                            &nbsp;
+                            <img src="issuesreport_files/sep12.png">&nbsp;
+
+                            <span class="issue_date">
+                                NEW
+                            </span>
+                
+						                &nbsp;
+						                <img src="issuesreport_files/sep12.png">&nbsp;
+						                
+						                <span class="rule_key">squid:S106</span>
+                            &nbsp;
+
+                          </div>
+                          <div class="discussionComment">
+                            Standard outputs should not be used directly to log anything
+                          </div>
+                        </div>
+                    </td>
+                  </tr>
+                <tr id="0L89" class="row">
+                  <td class="lid ">89</td>
+                  <td class="line ">
+                    <pre>		int id=0;</pre>
+                  </td>
+                </tr>
+                <tr id="0S89" class="blockSep">
+                  <td colspan="2"></td>
+                </tr>
+                <tr id="0L90" class="row">
+                  <td class="lid ">90</td>
+                  <td class="line ">
+                    <pre>		try</pre>
+                  </td>
+                </tr>
+                <tr id="0S90" class="blockSep">
+                  <td colspan="2"></td>
+                </tr>
+                <tr id="0L114" class="row">
+                  <td class="lid ">114</td>
+                  <td class="line ">
+                    <pre>			// Method Which is Used For Queries like Insert, Update, Delete</pre>
+                  </td>
+                </tr>
+                <tr id="0S114" class="blockSep">
+                  <td colspan="2"></td>
+                </tr>
+                <tr id="0L115" class="row">
+                  <td class="lid ">115</td>
+                  <td class="line ">
+                    <pre>	/******************************************************************************/</pre>
+                  </td>
+                </tr>
+                <tr id="0S115" class="blockSep">
+                  <td colspan="2"></td>
+                </tr>
+                <tr id="0L116" class="row">
+                  <td class="lid ">116</td>
+                  <td class="line ">
+                    <pre>		public boolean executeQuery(String SQ)</pre>
+                  </td>
+                </tr>
+                <tr id="0S116" class="blockSep">
+                  <td colspan="2"></td>
+                </tr>
+                  <tr id="0LV116" class="row">
+                    <td class="lid"></td>
+                    <td class="issues">
+                        <div class="issue" id="0159D55826AB05B7E9">
+                          <div class="vtitle">
+                            <i class="icon-severity-minor"></i>
+                            <span class="rulename">Rename this local variable name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.</span>
+                            &nbsp;
+                            <img src="issuesreport_files/sep12.png">&nbsp;
+
+                            <span class="issue_date">
+                                NEW
+                            </span>
+                
+						                &nbsp;
+						                <img src="issuesreport_files/sep12.png">&nbsp;
+						                
+						                <span class="rule_key">squid:S00117</span>
+                            &nbsp;
+
+                          </div>
+                          <div class="discussionComment">
+                            Local variable and method parameter names should comply with a naming convention
+                          </div>
+                        </div>
+                    </td>
+                  </tr>
+                <tr id="0L117" class="row">
+                  <td class="lid ">117</td>
+                  <td class="line ">
+                    <pre>		{</pre>
+                  </td>
+                </tr>
+                <tr id="0S117" class="blockSep">
+                  <td colspan="2"></td>
+                </tr>
+                <tr id="0L118" class="row">
+                  <td class="lid ">118</td>
+                  <td class="line ">
+                    <pre>			//System.out.println(&quot;Inside ExecuteQuery&quot;+SQ);</pre>
+                  </td>
+                </tr>
+                <tr id="0S118" class="blockSep">
+                  <td colspan="2"></td>
+                </tr>
+                  <tr id="0LV118" class="row">
+                    <td class="lid"></td>
+                    <td class="issues">
+                        <div class="issue" id="0159D55826AB05B7DE">
+                          <div class="vtitle">
+                            <i class="icon-severity-major"></i>
+                            <span class="rulename">This block of commented-out lines of code should be removed.</span>
+                            &nbsp;
+                            <img src="issuesreport_files/sep12.png">&nbsp;
+
+                            <span class="issue_date">
+                                NEW
+                            </span>
+                
+						                &nbsp;
+						                <img src="issuesreport_files/sep12.png">&nbsp;
+						                
+						                <span class="rule_key">squid:CommentedOutCodeLine</span>
+                            &nbsp;
+
+                          </div>
+                          <div class="discussionComment">
+                            Sections of code should not be &quot;commented out&quot;
+                          </div>
+                        </div>
+                    </td>
+                  </tr>
+                <tr id="0L119" class="row">
+                  <td class="lid ">119</td>
+                  <td class="line ">
+                    <pre>			int rowsAffected=0;</pre>
+                  </td>
+                </tr>
+                <tr id="0S119" class="blockSep">
+                  <td colspan="2"></td>
+                </tr>
+                <tr id="0L120" class="row">
+                  <td class="lid ">120</td>
+                  <td class="line ">
+                    <pre>			try</pre>
+                  </td>
+                </tr>
+                <tr id="0S120" class="blockSep">
+                  <td colspan="2"></td>
+                </tr>
+                <tr id="0L122" class="row">
+                  <td class="lid ">122</td>
+                  <td class="line ">
+                    <pre>				if(con==null)</pre>
+                  </td>
+                </tr>
+                <tr id="0S122" class="blockSep">
+                  <td colspan="2"></td>
+                </tr>
+                <tr id="0L123" class="row">
+                  <td class="lid ">123</td>
+                  <td class="line ">
+                    <pre>					openConnection();</pre>
+                  </td>
+                </tr>
+                <tr id="0S123" class="blockSep">
+                  <td colspan="2"></td>
+                </tr>
+                <tr id="0L124" class="row">
+                  <td class="lid ">124</td>
+                  <td class="line ">
+                    <pre>			//	System.out.println(&quot;Connection Est Inside ExecuteQuery&quot;+con);</pre>
+                  </td>
+                </tr>
+                <tr id="0S124" class="blockSep">
+                  <td colspan="2"></td>
+                </tr>
+                  <tr id="0LV124" class="row">
+                    <td class="lid"></td>
+                    <td class="issues">
+                        <div class="issue" id="0159D55826AB05B7DF">
+                          <div class="vtitle">
+                            <i class="icon-severity-major"></i>
+                            <span class="rulename">This block of commented-out lines of code should be removed.</span>
+                            &nbsp;
+                            <img src="issuesreport_files/sep12.png">&nbsp;
+
+                            <span class="issue_date">
+                                NEW
+                            </span>
+                
+						                &nbsp;
+						                <img src="issuesreport_files/sep12.png">&nbsp;
+						                
+						                <span class="rule_key">squid:CommentedOutCodeLine</span>
+                            &nbsp;
+
+                          </div>
+                          <div class="discussionComment">
+                            Sections of code should not be &quot;commented out&quot;
+                          </div>
+                        </div>
+                    </td>
+                  </tr>
+                <tr id="0L125" class="row">
+                  <td class="lid ">125</td>
+                  <td class="line ">
+                    <pre>				Statement stat=con.createStatement();</pre>
+                  </td>
+                </tr>
+                <tr id="0S125" class="blockSep">
+                  <td colspan="2"></td>
+                </tr>
+                  <tr id="0LV125" class="row">
+                    <td class="lid"></td>
+                    <td class="issues">
+                        <div class="issue" id="0159D55826AB05B7DD">
+                          <div class="vtitle">
+                            <i class="icon-severity-blocker"></i>
+                            <span class="rulename">Close this &quot;Statement&quot;.</span>
+                            &nbsp;
+                            <img src="issuesreport_files/sep12.png">&nbsp;
+
+                            <span class="issue_date">
+                                NEW
+                            </span>
+                
+						                &nbsp;
+						                <img src="issuesreport_files/sep12.png">&nbsp;
+						                
+						                <span class="rule_key">squid:S2095</span>
+                            &nbsp;
+
+                          </div>
+                          <div class="discussionComment">
+                            Resources should be closed
+                          </div>
+                        </div>
+                    </td>
+                  </tr>
+                <tr id="0L126" class="row">
+                  <td class="lid ">126</td>
+                  <td class="line ">
+                    <pre>				rowsAffected=stat.executeUpdate(SQ);</pre>
+                  </td>
+                </tr>
+                <tr id="0S126" class="blockSep">
+                  <td colspan="2"></td>
+                </tr>
+                <tr id="0L127" class="row">
+                  <td class="lid ">127</td>
+                  <td class="line ">
+                    <pre>			//	System.out.println(&quot;Row Affected Inside ExecuteQuery&quot;+SQ+&quot;.... ROW AFFCTED..........&quot;+rowsAffected);</pre>
+                  </td>
+                </tr>
+                <tr id="0S127" class="blockSep">
+                  <td colspan="2"></td>
+                </tr>
+                  <tr id="0LV127" class="row">
+                    <td class="lid"></td>
+                    <td class="issues">
+                        <div class="issue" id="0159D55826AB05B7E0">
+                          <div class="vtitle">
+                            <i class="icon-severity-major"></i>
+                            <span class="rulename">This block of commented-out lines of code should be removed.</span>
+                            &nbsp;
+                            <img src="issuesreport_files/sep12.png">&nbsp;
+
+                            <span class="issue_date">
+                                NEW
+                            </span>
+                
+						                &nbsp;
+						                <img src="issuesreport_files/sep12.png">&nbsp;
+						                
+						                <span class="rule_key">squid:CommentedOutCodeLine</span>
+                            &nbsp;
+
+                          </div>
+                          <div class="discussionComment">
+                            Sections of code should not be &quot;commented out&quot;
+                          </div>
+                        </div>
+                    </td>
+                  </tr>
+                <tr id="0L128" class="row">
+                  <td class="lid ">128</td>
+                  <td class="line ">
+                    <pre>			}catch(SQLException sqle)</pre>
+                  </td>
+                </tr>
+                <tr id="0S128" class="blockSep">
+                  <td colspan="2"></td>
+                </tr>
+                <tr id="0L129" class="row">
+                  <td class="lid ">129</td>
+                  <td class="line ">
+                    <pre>			{</pre>
+                  </td>
+                </tr>
+                <tr id="0S129" class="blockSep">
+                  <td colspan="2"></td>
+                </tr>
+                <tr id="0L132" class="row">
+                  <td class="lid ">132</td>
+                  <td class="line ">
+                    <pre>	</pre>
+                  </td>
+                </tr>
+                <tr id="0S132" class="blockSep">
+                  <td colspan="2"></td>
+                </tr>
+                <tr id="0L133" class="row">
+                  <td class="lid ">133</td>
+                  <td class="line ">
+                    <pre>	</pre>
+                  </td>
+                </tr>
+                <tr id="0S133" class="blockSep">
+                  <td colspan="2"></td>
+                </tr>
+                <tr id="0L134" class="row">
+                  <td class="lid ">134</td>
+                  <td class="line ">
+                    <pre>				if(rowsAffected&gt;=1)</pre>
+                  </td>
+                </tr>
+                <tr id="0S134" class="blockSep">
+                  <td colspan="2"></td>
+                </tr>
+                  <tr id="0LV134" class="row">
+                    <td class="lid"></td>
+                    <td class="issues">
+                        <div class="issue" id="0159D55826AB05B7E2">
+                          <div class="vtitle">
+                            <i class="icon-severity-minor"></i>
+                            <span class="rulename">Replace this if-then-else statement by a single return statement.</span>
+                            &nbsp;
+                            <img src="issuesreport_files/sep12.png">&nbsp;
+
+                            <span class="issue_date">
+                                NEW
+                            </span>
+                
+						                &nbsp;
+						                <img src="issuesreport_files/sep12.png">&nbsp;
+						                
+						                <span class="rule_key">squid:S1126</span>
+                            &nbsp;
+
+                          </div>
+                          <div class="discussionComment">
+                            Return of boolean expressions should not be wrapped into an &quot;if-then-else&quot; statement
+                          </div>
+                        </div>
+                    </td>
+                  </tr>
+                <tr id="0L135" class="row">
+                  <td class="lid ">135</td>
+                  <td class="line ">
+                    <pre>					return true;</pre>
+                  </td>
+                </tr>
+                <tr id="0S135" class="blockSep">
+                  <td colspan="2"></td>
+                </tr>
+                <tr id="0L136" class="row">
+                  <td class="lid ">136</td>
+                  <td class="line ">
+                    <pre>				else</pre>
+                  </td>
+                </tr>
+                <tr id="0S136" class="blockSep">
+                  <td colspan="2"></td>
+                </tr>
+                <tr id="0L142" class="row">
+                  <td class="lid ">142</td>
+                  <td class="line ">
+                    <pre>		// Method Which is Used to Get Result Set   For Select Query</pre>
+                  </td>
+                </tr>
+                <tr id="0S142" class="blockSep">
+                  <td colspan="2"></td>
+                </tr>
+                <tr id="0L143" class="row">
+                  <td class="lid ">143</td>
+                  <td class="line ">
+                    <pre>/******************************************************************************/</pre>
+                  </td>
+                </tr>
+                <tr id="0S143" class="blockSep">
+                  <td colspan="2"></td>
+                </tr>
+                <tr id="0L144" class="row">
+                  <td class="lid ">144</td>
+                  <td class="line ">
+                    <pre>	public ResultSet getResultSet(String SQ)</pre>
+                  </td>
+                </tr>
+                <tr id="0S144" class="blockSep">
+                  <td colspan="2"></td>
+                </tr>
+                  <tr id="0LV144" class="row">
+                    <td class="lid"></td>
+                    <td class="issues">
+                        <div class="issue" id="0159D55826AB05B7EA">
+                          <div class="vtitle">
+                            <i class="icon-severity-minor"></i>
+                            <span class="rulename">Rename this local variable name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.</span>
+                            &nbsp;
+                            <img src="issuesreport_files/sep12.png">&nbsp;
+
+                            <span class="issue_date">
+                                NEW
+                            </span>
+                
+						                &nbsp;
+						                <img src="issuesreport_files/sep12.png">&nbsp;
+						                
+						                <span class="rule_key">squid:S00117</span>
+                            &nbsp;
+
+                          </div>
+                          <div class="discussionComment">
+                            Local variable and method parameter names should comply with a naming convention
+                          </div>
+                        </div>
+                    </td>
+                  </tr>
+                <tr id="0L145" class="row">
+                  <td class="lid ">145</td>
+                  <td class="line ">
+                    <pre>	{</pre>
+                  </td>
+                </tr>
+                <tr id="0S145" class="blockSep">
+                  <td colspan="2"></td>
+                </tr>
+                <tr id="0L146" class="row">
+                  <td class="lid ">146</td>
+                  <td class="line ">
+                    <pre>		ResultSet rs = null;</pre>
+                  </td>
+                </tr>
+                <tr id="0S146" class="blockSep">
+                  <td colspan="2"></td>
+                </tr>
+                <tr id="0L150" class="row">
+                  <td class="lid ">150</td>
+                  <td class="line ">
+                    <pre>				openConnection();</pre>
+                  </td>
+                </tr>
+                <tr id="0S150" class="blockSep">
+                  <td colspan="2"></td>
+                </tr>
+                <tr id="0L151" class="row">
+                  <td class="lid ">151</td>
+                  <td class="line ">
+                    <pre>			logger.info(&quot;Test1...con....&quot;+con);</pre>
+                  </td>
+                </tr>
+                <tr id="0S151" class="blockSep">
+                  <td colspan="2"></td>
+                </tr>
+                <tr id="0L152" class="row">
+                  <td class="lid ">152</td>
+                  <td class="line ">
+                    <pre>			Statement stat=con.createStatement();</pre>
+                  </td>
+                </tr>
+                <tr id="0S152" class="blockSep">
+                  <td colspan="2"></td>
+                </tr>
+                  <tr id="0LV152" class="row">
+                    <td class="lid"></td>
+                    <td class="issues">
+                        <div class="issue" id="0159D55826AB05B7DC">
+                          <div class="vtitle">
+                            <i class="icon-severity-blocker"></i>
+                            <span class="rulename">Close this &quot;Statement&quot;.</span>
+                            &nbsp;
+                            <img src="issuesreport_files/sep12.png">&nbsp;
+
+                            <span class="issue_date">
+                                NEW
+                            </span>
+                
+						                &nbsp;
+						                <img src="issuesreport_files/sep12.png">&nbsp;
+						                
+						                <span class="rule_key">squid:S2095</span>
+                            &nbsp;
+
+                          </div>
+                          <div class="discussionComment">
+                            Resources should be closed
+                          </div>
+                        </div>
+                    </td>
+                  </tr>
+                <tr id="0L153" class="row">
+                  <td class="lid ">153</td>
+                  <td class="line ">
+                    <pre>			logger.info(&quot;Test2....&quot;+SQ);</pre>
+                  </td>
+                </tr>
+                <tr id="0S153" class="blockSep">
+                  <td colspan="2"></td>
+                </tr>
+                <tr id="0L154" class="row">
+                  <td class="lid ">154</td>
+                  <td class="line ">
+                    <pre>			rs=stat.executeQuery(SQ);</pre>
+                  </td>
+                </tr>
+                <tr id="0S154" class="blockSep">
+                  <td colspan="2"></td>
+                </tr>
+          </table>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+</div>
+<script type="text/javascript">
+  $(function() {
+    refreshFilters(true);
+  });
+</script>
+</body>
+</html>
